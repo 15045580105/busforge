@@ -1,0 +1,42 @@
+[2026-09-08 19:41:45.746] ================= Logging =================
+[2026-09-08 19:41:45.746] [ERR] USBDeviceMgr::OpenDev nDevIndex:0 Device Path Empty
+[2026-09-08 19:41:45.746] [ERR] Device::OpenDevice USBDeviceMgr Open device[0] failed!
+[2026-09-08 19:42:26.261] ================= Logging =================
+[2026-09-08 19:42:26.261] [ERR] USBDeviceMgr::OpenDev nDevIndex:0 Device Path Empty
+[2026-09-08 19:42:26.261] [ERR] Device::OpenDevice USBDeviceMgr Open device[0] failed!
+[2026-09-09 10:25:09.932] ================= Logging =================
+[2026-09-09 10:25:09.932] [ERR] USBDeviceMgr::OpenDev nDevIndex:0 Device Path Empty
+[2026-09-09 10:25:09.932] [ERR] Device::OpenDevice USBDeviceMgr Open device[0] failed!
+[2026-09-09 10:25:17.741] [ERR] USBDeviceMgr::OpenDev nDevIndex:0 Device Path Empty
+[2026-09-09 10:25:17.741] [ERR] Device::OpenDevice USBDeviceMgr Open device[0] failed!
+[2026-09-09 10:25:54.053] [ERR] USBDeviceMgr::OpenDev nDevIndex:0 Device Path Empty
+[2026-09-09 10:25:54.053] [ERR] Device::OpenDevice USBDeviceMgr Open device[0] failed!
+[2026-09-09 15:36:26.491] ================= Logging =================
+[2026-09-09 15:36:26.491] [ERR] USBDeviceMgr::OpenDev nDevIndex:0 Device Path Empty
+[2026-09-09 15:36:26.491] [ERR] Device::OpenDevice USBDeviceMgr Open device[0] failed!
+[2026-09-09 16:35:16.145] ================= Logging =================
+[2026-09-09 16:35:16.145] [ERR] USBDeviceMgr::OpenDev nDevIndex:0 Device Path Empty
+[2026-09-09 16:35:16.145] [ERR] Device::OpenDevice USBDeviceMgr Open device[0] failed!
+[2026-09-09 16:57:49.940] ================= Logging =================
+[2026-09-09 16:57:49.940] [ERR] USBDeviceMgr::OpenDev nDevIndex:0 Device Path Empty
+[2026-09-09 16:57:49.940] [ERR] Device::OpenDevice USBDeviceMgr Open device[0] failed!
+[2026-09-09 17:12:50.707] ================= Logging =================
+[2026-09-09 17:12:50.707] [ERR] USBDeviceMgr::OpenDev nDevIndex:0 Device Path Empty
+[2026-09-09 17:12:50.707] [ERR] Device::OpenDevice USBDeviceMgr Open device[0] failed!
+[2026-09-09 19:43:40.384] ================= Logging =================
+[2026-09-09 19:43:40.384] [ERR] USBDeviceMgr::OpenDev nDevIndex:0 Device Path Empty
+[2026-09-09 19:43:40.384] [ERR] Device::OpenDevice USBDeviceMgr Open device[0] failed!
+[2026-09-09 20:04:07.117] ================= Logging =================
+[2026-09-09 20:04:07.118] [ERR] USBDeviceMgr::OpenDev nDevIndex:0 Device Path Empty
+[2026-09-09 20:04:07.118] [ERR] Device::OpenDevice USBDeviceMgr Open device[0] failed!
+[2026-09-10 19:36:33.094] ================= Logging =================
+[2026-09-10 19:36:33.094] [ERR] USBDeviceMgr::OpenDev nDevIndex:0 Device Path Empty
+[2026-09-10 19:36:33.094] [ERR] Device::OpenDevice USBDeviceMgr Open device[0] failed!
+[2026-09-16 10:57:22.575] ================= Logging =================
+[2026-09-16 10:57:22.576] [ERR] USBDeviceMgr::OpenDev nDevIndex:0 Device Path Empty
+[2026-09-16 10:57:22.576] [ERR] Device::OpenDevice USBDeviceMgr Open device[0] failed!
+[2026-09-16 10:59:52.851] ================= Logging =================
+[2026-09-16 10:59:52.851] [ERR] USBDeviceMgr::OpenDev nDevIndex:0 Device Path Empty
+[2026-09-16 10:59:52.851] [ERR] Device::OpenDevice USBDeviceMgr Open device[0] failed!
+[2026-09-16 11:00:13.692] [ERR] USBDeviceMgr::OpenDev nDevIndex:0 Device Path Empty
+[2026-09-16 11:00:13.692] [ERR] Device::OpenDevice USBDeviceMgr Open device[0] failed!

@@ -1,0 +1,102 @@
+{
+  "project_name": "MyProject1",
+  "project_id": "3849a141c009",
+  "file_path": "D:\\Code26\\busforge\\MyProject1.bfproj",
+  "version": "0.3.0",
+  "devices": [
+    {
+      "device_id": "ZLG#DB08D598608904A4F280",
+      "vendor": "ZLG",
+      "model": "USBCANFD_200U",
+      "serial": "DB08D598608904A4F280",
+      "index": 0,
+      "bus_type": "can",
+      "vendor_params": {}
+    }
+  ],
+  "channels": [
+    {
+      "key": "CAN1",
+      "device_id": "ZLG#DB08D598608904A4F280",
+      "hw_channel": 1,
+      "bus_type": "can",
+      "baud_rate": 500,
+      "is_fd": true,
+      "data_baud_rate": 2000,
+      "dbc_path": "D:\\UID01728\\Downloads\\IDCCIDC_CANFD.dbc",
+      "dbc_paths": [
+        "D:\\UID01728\\Downloads\\IDCCIDC_CANFD.dbc"
+      ],
+      "enabled": true,
+      "listen_only": false,
+      "terminal_resistor": true
+    },
+    {
+      "key": "CAN2",
+      "device_id": "ZLG#DB08D598608904A4F280",
+      "hw_channel": 2,
+      "bus_type": "can",
+      "baud_rate": 500,
+      "is_fd": true,
+      "data_baud_rate": 2000,
+      "dbc_path": "",
+      "dbc_paths": [],
+      "enabled": true,
+      "listen_only": false,
+      "terminal_resistor": true
+    },
+    {
+      "key": "CAN3",
+      "device_id": "ZLG#DB08D598608904A4F280",
+      "hw_channel": 3,
+      "bus_type": "can",
+      "baud_rate": 500,
+      "is_fd": false,
+      "data_baud_rate": 2000,
+      "dbc_path": "",
+      "dbc_paths": [],
+      "enabled": true,
+      "listen_only": false,
+      "terminal_resistor": false
+    }
+  ],
+  "panels": [
+    {
+      "type": "transmit",
+      "panel_id": "Transmit_1",
+      "channel_key": "",
+      "state": {
+        "items": [
+          {
+            "kind": "frame",
+            "name": "CCU_ZCUR_SBM_IDC_Msg",
+            "channel": "CAN1",
+            "enabled": true,
+            "count": 0,
+            "interval": 100,
+            "src": "db",
+            "id": 95,
+            "is_fd": true,
+            "is_extended": false,
+            "is_remote": false,
+            "is_brs": false,
+            "data": "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+            "phys": {
+              "KAE_SBMToIDC_Data": 0.0
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "trace",
+      "panel_id": "Trace_1",
+      "channel_key": ""
+    },
+    {
+      "type": "logger",
+      "panel_id": "Logger_1",
+      "channel_key": ""
+    }
+  ]
+}
