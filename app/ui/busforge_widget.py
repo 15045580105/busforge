@@ -15,19 +15,19 @@ from typing import Optional
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QSplitter, QPlainTextEdit
 )
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Qt, Signal, QTimer
 from PySide6.QtGui import QFont
 
 from app.config import AppConfig
-from app.core.device_manager import DeviceManager
-from app.core.data_hub import DataHub
-from app.core.connect_worker import ConnectWorker
-from app.core.message_bus import MessageBus
-from app.core.variable_system import VariableRegistry
+from app.devices.device_manager import DeviceManager
+from app.datahub.data_hub import DataHub
+from app.devices.connect_worker import ConnectWorker
+from app.common.message_bus import MessageBus
+from app.common.variable_system import VariableRegistry
 from app.ui.project_tree import ProjectTree
 from app.ui.ads_manager import AdsManager, ADS_AVAILABLE
-from app.ui.widgets.device_manage_panel import DeviceManagePanel
-from app.ui.widgets.settings_panel import SettingsPanel
+from app.devices.device_manage_panel import DeviceManagePanel
+from app.ui.settings_panel import SettingsPanel
 
 logger = logging.getLogger(__name__)
 
@@ -64,6 +64,8 @@ class BusForgeWidget(QWidget):
         # 异步连接工作线程与运行代号 (代号用于作废切换/终止前的回调)
         self._connect_worker: Optional[ConnectWorker] = None
         self._run_gen: int = 0
+        self._panel_restore_gen: int = 0
+        self._panel_widgets: dict[str, object] = {}
 
         self._ads_manager: Optional[AdsManager] = None
         self._project_tree: Optional[ProjectTree] = None
@@ -380,11 +382,25 @@ class BusForgeWidget(QWidget):
         dock = self._ads_manager.add_panel(panel_id, widget)
         if dock:
             self._message_bus.register_panel(panel_id, panel_type, channel_key)
+            self._panel_widgets[panel_id] = widget
+            if panel_type == "logger" and hasattr(widget, "send_to_trace_requested"):
+                widget.send_to_trace_requested.connect(self._send_log_to_trace)
             logger.info(f"面板已创建: {panel_id} ({panel_type})")
+
+    def _send_log_to_trace(self, path: str):
+        for panel_id, widget in self._panel_widgets.items():
+            if self._message_bus.get_panel_type(panel_id) == "trace":
+                widget.import_file(path)
+                self._ads_manager.activate_panel(panel_id)
+                return
+        if self._project_tree:
+            self._project_tree.create_panel("trace", "Trace_Import", "")
+            QTimer.singleShot(0, lambda: self._send_log_to_trace(path))
 
     def _on_panel_close_requested(self, panel_id: str):
         self._ads_manager.remove_panel(panel_id)
         self._message_bus.unregister_panel(panel_id)
+        self._panel_widgets.pop(panel_id, None)
 
     def _on_panel_activate_requested(self, panel_id: str):
         """双击工程树面板实例节点 -> 激活右侧对应标签页"""
@@ -402,11 +418,15 @@ class BusForgeWidget(QWidget):
                 self._project_tree.set_running_badge(None)
         # 关闭旧工程的功能面板 (保留设备管理/日志等系统面板)
         if self._ads_manager:
-            for pid in self._ads_manager.list_panels():
-                if pid in self._SYSTEM_PANELS:
-                    continue
-                self._ads_manager.remove_panel(pid)
-                self._message_bus.unregister_panel(pid)
+            self._ads_manager.begin_panel_batch()
+            try:
+                for pid in self._ads_manager.list_panels():
+                    if pid in self._SYSTEM_PANELS:
+                        continue
+                    self._ads_manager.remove_panel(pid)
+                    self._message_bus.unregister_panel(pid)
+            finally:
+                self._ads_manager.end_panel_batch()
         # 切换 DeviceManager 活动工程池 (内部先断开旧工程连接)
         tree = self._project_tree
         if tree:
@@ -420,6 +440,17 @@ class BusForgeWidget(QWidget):
         # 设备管理面板随工程刷新
         if self._device_panel is not None:
             self._device_panel.reload_all()
+        # 恢复活动工程的面板 dock。延迟到当前 QtAds 清理信号处理完毕后执行，
+        # 避免旧停靠区的 currentChanged 回调与新面板创建交错。
+        if project_index >= 0 and self._project_tree:
+            self._panel_restore_gen += 1
+            restore_gen = self._panel_restore_gen
+
+            def restore():
+                if restore_gen == self._panel_restore_gen:
+                    self._project_tree.restore_active_panels()
+
+            QTimer.singleShot(0, restore)
         logger.info(f"已切换到项目 {project_index}")
 
     # ------------------------------------------------------------------ #
@@ -443,7 +474,7 @@ class BusForgeWidget(QWidget):
         self._cancel_connect_worker()
         self._hub.stop_polling()
         # Logger 记录中则停止落盘, 保证文件完整
-        from app.core.can_logger import CanLogger
+        from app.recorder.can_logger import CanLogger
         CanLogger.instance().stop()
         self._dm.shutdown()
         self.save_layout()

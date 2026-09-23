@@ -8,7 +8,7 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import Qt
 
-from app.core.variable_system import VariableRegistry
+from app.common.variable_system import VariableRegistry
 
 
 class PropertiesPanel(QWidget):
@@ -30,6 +30,7 @@ class PropertiesPanel(QWidget):
 
         self._name_edit = QLineEdit()
         self._name_edit.setReadOnly(True)
+        self._name_edit.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         form.addRow("控件名:", self._name_edit)
 
         self._type_label = QLabel("")

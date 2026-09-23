@@ -15,7 +15,7 @@ from PySide6.QtWidgets import (
     QComboBox, QLabel, QPushButton, QProgressBar
 )
 
-from app.core.variable_system import VariableRegistry
+from app.common.variable_system import VariableRegistry
 
 logger = logging.getLogger(__name__)
 

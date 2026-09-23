@@ -64,19 +64,19 @@ def main():
 
     # 绑定全局UI状态单例 (语言/进制) - 必须在创建任何UI组件前,
     # 以便工具栏/工程树/面板按已持久化的语言与进制渲染
-    from app.core.ui_settings import UISettings
+    from app.common.ui_settings import UISettings
     UISettings.instance().bind(config)
 
     # 绑定工作空间管理器 (读取 save_dir, 默认=运行/安装路径)
-    from app.core.workspace import WorkspaceManager
+    from app.common.workspace import WorkspaceManager
     WorkspaceManager.bind(config)
 
     # 初始化设备管理器 (设备定义按工程私有, 随 .bfproj 加载; 启动不连硬件)
-    from app.core.device_manager import DeviceManager
+    from app.devices.device_manager import DeviceManager
     DeviceManager.instance()
 
     # Logger 自动记录监听 (跟随项目运行自动开始, 开关在全局配置)
-    from app.core.can_logger import AutoLogger
+    from app.recorder.can_logger import AutoLogger
     AutoLogger.instance()
 
     # 创建主窗口

@@ -1,0 +1,14 @@
+__pycache__/
+*.py[cod]
+*.log
+*.png
+.vscode/
+_run_*
+_probe_*
+_verify_*
+_repro_*
+tools/dev/
+data/logger/
+
+!resources/
+!resources/*.png

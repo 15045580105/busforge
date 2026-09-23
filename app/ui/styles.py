@@ -19,6 +19,8 @@ _RES_DIR = os.path.normpath(os.path.join(
 _CHECK_ICON_PATH = os.path.join(_RES_DIR, "checkbox_checked.png").replace("\\", "/")
 _DOWN_ARROW_PATH = os.path.join(_RES_DIR, "combo_down_arrow.png").replace("\\", "/")
 _DOWN_ARROW_GRAY_PATH = os.path.join(_RES_DIR, "combo_down_arrow_gray.png").replace("\\", "/")
+_SPIN_UP_ARROW_PATH = os.path.join(_RES_DIR, "spin_up_arrow.png").replace("\\", "/")
+_SPIN_DOWN_ARROW_PATH = os.path.join(_RES_DIR, "spin_down_arrow.png").replace("\\", "/")
 
 
 def _ensure_check_icon() -> str:
@@ -75,6 +77,40 @@ def _ensure_combo_arrows():
             img.save(path)
     except Exception:
         pass
+
+
+def _ensure_spin_arrows():
+    """生成QSpinBox上下箭头图标PNG (自定义::up-button后Windows不再绘默认箭头)"""
+    try:
+        from PySide6.QtCore import Qt, QPointF
+        from PySide6.QtGui import QImage, QPainter, QColor, QPolygonF
+        specs = (
+            (_SPIN_UP_ARROW_PATH, "#555555", True),
+            (_SPIN_DOWN_ARROW_PATH, "#555555", False),
+        )
+        for path, color, up in specs:
+            if os.path.exists(path):
+                continue
+            w, h = 10, 7
+            img = QImage(w, h, QImage.Format.Format_ARGB32)
+            img.fill(Qt.GlobalColor.transparent)
+            p = QPainter(img)
+            p.setRenderHint(QPainter.RenderHint.Antialiasing)
+            p.setPen(Qt.PenStyle.NoPen)
+            p.setBrush(QColor(color))
+            if up:
+                poly = QPolygonF([QPointF(1, h - 1), QPointF(w - 1, h - 1),
+                                  QPointF(w / 2, 1)])
+            else:
+                poly = QPolygonF([QPointF(1, 1), QPointF(w - 1, 1),
+                                  QPointF(w / 2, h - 1)])
+            p.drawPolygon(poly)
+            p.end()
+            os.makedirs(_RES_DIR, exist_ok=True)
+            img.save(path)
+    except Exception:
+        pass
+
 
 # ============================================================
 # 暖灰专业工业风主题 - Soft Tech
@@ -269,6 +305,54 @@ QLineEdit:disabled, QSpinBox:disabled, QDoubleSpinBox:disabled {
     color: #888888;
     border-color: #b0aba4;
 }
+/* 数字框步进按钮: 一旦样式表定义了::up-button, Qt 即停用原生按钮绘制,
+   必须显式给出子控件(否则只剩 14px 宽隐形小热区且无箭头可见)。
+   width 18px 较原生 14px 更宽更好点; 行高由表行决定, 表行 28px 时各得 ~14px */
+QSpinBox::up-button, QDoubleSpinBox::up-button,
+QSpinBox::down-button, QDoubleSpinBox::down-button {
+    subcontrol-origin: border;
+    width: 18px;
+    background-color: #f2f0eb;
+    border-left: 1px solid #c0bcb6;
+}
+QSpinBox::up-button {
+    subcontrol-position: top right;
+}
+QSpinBox::down-button {
+    subcontrol-position: bottom right;
+}
+QDoubleSpinBox::up-button {
+    subcontrol-position: top right;
+}
+QDoubleSpinBox::down-button {
+    subcontrol-position: bottom right;
+}
+QSpinBox::up-button:hover, QDoubleSpinBox::up-button:hover,
+QSpinBox::down-button:hover, QDoubleSpinBox::down-button:hover {
+    background-color: #e0ded8;
+}
+QSpinBox::up-button:pressed, QDoubleSpinBox::up-button:pressed,
+QSpinBox::down-button:pressed, QDoubleSpinBox::down-button:pressed {
+    background-color: #c5d8e8;
+}
+QSpinBox:disabled::up-button, QDoubleSpinBox:disabled::up-button,
+QSpinBox:disabled::down-button, QDoubleSpinBox:disabled::down-button {
+    background-color: #c5c0b9;
+    border-left-color: #b0aba4;
+}
+QSpinBox::up-arrow, QDoubleSpinBox::up-arrow {
+    image: url(@SPIN_UP_ARROW@);
+    width: 10px;
+    height: 7px;
+}
+QSpinBox::down-arrow, QDoubleSpinBox::down-arrow {
+    image: url(@SPIN_DOWN_ARROW@);
+    width: 10px;
+    height: 7px;
+}
+/* 注意: 不能写 :disabled::up-arrow / :disabled::down-arrow 规则 ——
+   Qt QSS 对启用态 QSpinBox 会误命中该子元素, 把禁用态箭头图
+   重复绘制在编辑区正中 (表现为多出的 ▼)。禁用时箭头保持深色, 视觉影响极小 */
 /* hex 字节格行内编辑器: 27px 小格, 零 padding 保证两位字符完整可见 */
 QLineEdit#hexCellEditor {
     padding: 0 2px;
@@ -756,7 +840,10 @@ def get_theme(name: str = "soft_tech") -> str:
     """
     _ensure_check_icon()
     _ensure_combo_arrows()
+    _ensure_spin_arrows()
     return (SOFT_TECH
             .replace("@CHECK_ICON@", _CHECK_ICON_PATH)
             .replace("@DOWN_ARROW@", _DOWN_ARROW_PATH)
-            .replace("@DOWN_ARROW_GRAY@", _DOWN_ARROW_GRAY_PATH))
+            .replace("@DOWN_ARROW_GRAY@", _DOWN_ARROW_GRAY_PATH)
+            .replace("@SPIN_UP_ARROW@", _SPIN_UP_ARROW_PATH)
+            .replace("@SPIN_DOWN_ARROW@", _SPIN_DOWN_ARROW_PATH))

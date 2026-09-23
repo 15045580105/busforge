@@ -16,18 +16,19 @@ from typing import Optional
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QTreeWidget, QTreeWidgetItem,
     QMenu, QFileDialog, QMessageBox, QInputDialog,
-    QStyledItemDelegate, QStyle, QApplication, QStyleOptionViewItem
+    QStyledItemDelegate, QStyle, QApplication, QStyleOptionViewItem,
+    QAbstractItemView
 )
 from PySide6.QtCore import Qt, Signal, QRectF, QRect, QPointF, QSize
 from PySide6.QtGui import (
     QAction, QFont, QPainter, QColor, QPen, QBrush, QPainterPath, QIcon, QPalette
 )
 
-from app.core.device_manager import DeviceManager
-from app.core.data_hub import DataHub
-from app.core.ui_settings import UISettings
-from app.core.workspace import WorkspaceManager
-from app.core.i18n import tr
+from app.devices.device_manager import DeviceManager
+from app.datahub.data_hub import DataHub
+from app.common.ui_settings import UISettings
+from app.common.workspace import WorkspaceManager
+from app.common.i18n import tr
 
 logger = logging.getLogger(__name__)
 
@@ -642,6 +643,9 @@ class ProjectTree(QWidget):
         self._tree.itemClicked.connect(self._on_item_clicked)
         self._tree.itemDoubleClicked.connect(self._on_double_click)
         self._tree.setDragDropMode(QTreeWidget.DragDropMode.NoDragDrop)
+        self._tree.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self._tree.setEditTriggers(
+            QAbstractItemView.EditTrigger.NoEditTriggers)
         self._tree.setIndentation(20)
         self._tree.setIconSize(QSize(16, 16))
         self._tree.setItemDelegate(_TreeIconDelegate(self._tree))
@@ -1003,9 +1007,12 @@ class ProjectTree(QWidget):
         self._manager.switch_to(target)
         self._refresh_tree_display()
         self.project_switched.emit(target)
-        # 为活动工程创建面板 dock (树节点已在 load 时重建)
-        self._restore_active_panel_docks()
+        # 活动工程的面板 dock 由 project_switched 处理器统一重建 (见 BusForgeWidget)
         logger.info(f"会话已恢复: {count} 个工程, 活动={target}")
+
+    def restore_active_panels(self):
+        """为当前活动工程重建面板 dock (切回工程/删除其他工程后恢复编辑区)"""
+        self._restore_active_panel_docks()
 
     def _restore_active_panel_docks(self):
         """为活动工程已恢复的面板树节点创建 dock widget"""
@@ -1098,8 +1105,14 @@ class ProjectTree(QWidget):
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
         if reply != QMessageBox.StandardButton.Yes:
             return
-        # 删除该工程的设备池 (若为活动工程则先断开其连接)
-        self._dm.unregister_project(info.project_id)
+        # 删除活动工程且正在运行: 先停轮询再断开设备,
+        # 避免收数/发送路径访问已关闭的硬件实例 (闪退风险)
+        if proj_idx == self._manager.active_index and self._hub.running:
+            self._hub.stop_polling()
+            self.set_running_badge(None)
+        # 删除该工程的设备池 (若为活动工程则先断开其连接)。延后广播，避免树结构
+        # 尚未完成更新时触发设备面板和自动保存重入。
+        self._dm.unregister_project(info.project_id, emit=False)
         # 清理该工程的面板元数据/节点引用 (随树节点一并移除)
         for pid in [p for p, m in self._panel_meta.items()
                     if m.get('project_id') == info.project_id]:
@@ -1119,9 +1132,13 @@ class ProjectTree(QWidget):
         if self._manager.project_count > 0:
             self._manager.switch_to(min(proj_idx, self._manager.project_count - 1))
             self._refresh_tree_display()
+            self._dm.pool_changed.emit()
             self.project_switched.emit(self._manager.active_index)
         else:
             self._show_empty_hint()
+            # 已无工程: 通知 widget 停运行/关面板/清空活动工程池 (与清空工作空间一致)
+            self._dm.pool_changed.emit()
+            self.project_switched.emit(-1)
         self.autosave()
         logger.info(f"项目已删除: {info.name}")
 
@@ -1491,28 +1508,28 @@ class ProjectTree(QWidget):
     def _create_panel_widget(self, panel_type, channel_key):
         try:
             if panel_type == "trace":
-                from app.ui.widgets.trace_view import TraceView
+                from app.monitors.trace_view import TraceView
                 return TraceView(channel_key=channel_key)
             elif panel_type == "signal":
-                from app.ui.widgets.signal_monitor import SignalMonitorPanel
+                from app.monitors.signal_monitor import SignalMonitorPanel
                 return SignalMonitorPanel(channel_key=channel_key)
             elif panel_type == "graphy":
-                from app.ui.widgets.graphy_view import GraphyView
+                from app.monitors.graphy_view import GraphyView
                 return GraphyView(channel_key=channel_key)
             elif panel_type == "panel":
-                from app.ui.widgets.custom_panel import CustomPanel
+                from app.ui.panel_editor.custom_panel import CustomPanel
                 return CustomPanel()
             elif panel_type == "uds":
-                from app.ui.widgets.diagnostic import DiagnosticPanel
+                from app.diagnostic.diagnostic import DiagnosticPanel
                 return DiagnosticPanel(channel_key=channel_key)
             elif panel_type == "script":
-                from app.ui.widgets.script_editor import ScriptEditorPanel
+                from app.script.script_editor import ScriptEditorPanel
                 return ScriptEditorPanel()
             elif panel_type == "transmit":
-                from app.ui.widgets.transmit_panel import TransmitPanel
+                from app.transmit.transmit_panel import TransmitPanel
                 return TransmitPanel(channel_key=channel_key)
             elif panel_type == "logger":
-                from app.ui.widgets.logger_panel import LoggerPanel
+                from app.recorder.logger_panel import LoggerPanel
                 return LoggerPanel(channel_key=channel_key)
             else:
                 logger.warning(f"未知面板类型: {panel_type}")

@@ -13,9 +13,9 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt, QTimer
 
 from app.config import AppConfig
-from app.core.ui_settings import UISettings
-from app.core.workspace import WorkspaceManager
-from app.core.i18n import tr
+from app.common.ui_settings import UISettings
+from app.common.workspace import WorkspaceManager
+from app.common.i18n import tr
 from app.ui.busforge_widget import BusForgeWidget
 from app.ui.toolbar_widget import ToolbarWidget
 
@@ -111,7 +111,7 @@ class MainWindow(QMainWindow):
         self._toolbar.device_manage.connect(
             lambda: self._widget.open_device_panel())
         # 进制 / 语言 切换 -> 全局 UISettings 单例
-        from app.core.ui_settings import UISettings
+        from app.common.ui_settings import UISettings
         ui = UISettings.instance()
         self._toolbar.toggle_number_format.connect(ui.toggle_number_format)
         self._toolbar.toggle_language.connect(ui.toggle_language)

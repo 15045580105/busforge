@@ -18,8 +18,8 @@ from PySide6.QtGui import (
     QPainter, QColor, QPen, QBrush, QFont, QPainterPath, QFontMetrics
 )
 
-from app.core.ui_settings import UISettings
-from app.core.i18n import tr
+from app.common.ui_settings import UISettings
+from app.common.i18n import tr
 
 
 # ============================================================

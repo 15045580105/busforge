@@ -12,7 +12,7 @@ from PySide6.QtWidgets import QWidget, QMenu
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
 
-from app.core.i18n import tr
+from app.common.i18n import tr
 
 logger = logging.getLogger(__name__)
 
@@ -114,6 +114,8 @@ class AdsManager:
         self._dock_manager = None
         self._panels: dict[str, object] = {}  # panel_id -> CDockWidget
         self._hooked_areas: set[int] = set()  # 已连接切换信号的停靠区 id
+        self._batch_depth = 0
+        self._tab_refresh_pending = False
         self._init_dock_manager()
 
     def _init_dock_manager(self):
@@ -220,12 +222,49 @@ class AdsManager:
         return dock_widget
 
     def remove_panel(self, title: str):
-        """移除面板"""
+        """移除面板 (安全顺序: 面板清理 -> 从管理器摘除 -> 同步销毁)"""
         dock = self._panels.pop(title, None)
         if dock and ADS_AVAILABLE:
-            dock.deleteLater()
-            self._refresh_tab_states()
+            widget = None
+            try:
+                widget = dock.widget()
+            except Exception:
+                pass
+            if widget is not None:
+                try:
+                    from PySide6.QtGui import QCloseEvent
+                    widget.closeEvent(QCloseEvent())
+                except Exception as e:
+                    logger.debug(f"面板内容关闭跳过({title}): {e}")
+            try:
+                self._dock_manager.removeDockWidget(dock)
+            except Exception as e:
+                logger.debug(f"面板摘除跳过({title}): {e}")
+            try:
+                dock.delete()
+            except Exception as e:
+                logger.debug(f"面板销毁跳过({title}): {e}")
+            self._request_tab_refresh()
             logger.debug(f"面板已移除: {title}")
+
+    def begin_panel_batch(self):
+        """暂缓面板批量变更期间的标签刷新"""
+        self._batch_depth += 1
+
+    def end_panel_batch(self):
+        """完成面板批量变更并刷新一次标签状态"""
+        if self._batch_depth == 0:
+            return
+        self._batch_depth -= 1
+        if self._batch_depth == 0 and self._tab_refresh_pending:
+            self._tab_refresh_pending = False
+            self._refresh_tab_states()
+
+    def _request_tab_refresh(self):
+        if self._batch_depth:
+            self._tab_refresh_pending = True
+        else:
+            self._refresh_tab_states()
 
     def activate_panel(self, title: str):
         """激活面板(切换到前台)"""
